@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Book-face — Criar Status</title>
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="layout.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    .centered{max-width:720px;margin:18px auto;padding:12px}
+    .card{background:#fff;border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+    .bg-options{display:flex;gap:8px;margin-top:10px}
+    .bg-swatch{width:44px;height:44px;border-radius:8px;cursor:pointer;border:2px solid transparent}
+    .bg-swatch.selected{outline:3px solid rgba(0,0,0,0.08)}
+    .preview{margin-top:12px;padding:12px;border-radius:12px;color:#fff;min-height:120px;display:flex;flex-direction:column;gap:8px}
+    .file-preview img,.file-preview video{max-width:100%;border-radius:8px}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="left"><a href="feed.html" class="link">Voltar</a></div>
+    <div class="center">Criar Status</div>
+    <div class="right"></div>
+  </header>
+
+  <main class="centered">
+    <section class="card">
+      <div style="display:flex;gap:12px;align-items:center">
+        <img id="myAvatar" src="avatar-default.png" style="width:56px;height:56px;border-radius:10px">
+        <div style="flex:1">
+          <textarea id="statusText" placeholder="Escreva algo para o seu status..." style="width:100%;min-height:80px;border-radius:8px;padding:8px;border:1px solid #e6eef6"></textarea>
+        </div>
+      </div>
+
+      <div style="margin-top:10px">
+        <strong>Escolher fundo</strong>
+        <div class="bg-options" id="bgOptions">
+          <div class="bg-swatch" data-color="#0b5ed7" style="background:#0b5ed7"></div>
+          <div class="bg-swatch" data-color="#6f42c1" style="background:#6f42c1"></div>
+          <div class="bg-swatch" data-color="#198754" style="background:#198754"></div>
+          <div class="bg-swatch" data-color="#d63384" style="background:#d63384"></div>
+          <div class="bg-swatch" data-color="#f59e0b" style="background:#f59e0b"></div>
+        </div>
+      </div>
+
+      <div style="margin-top:10px;display:flex;gap:8px;align-items:center">
+        <label class="btn small">📷 Adicionar foto/vídeo <input id="statusFile" type="file" accept="image/*,video/*" style="display:none"></label>
+        <button id="publishStatus" class="btn primary">Publicar status</button>
+      </div>
+
+      <div class="preview" id="statusPreview" style="background:#0b5ed7">
+        <div id="previewText" style="font-size:18px"></div>
+        <div class="file-preview" id="statusFilePreview"></div>
+      </div>
+    </section>
+  </main>
+
+  <script src="storage.js"></script>
+  <script>
+  (function(){
+    const session = DB.getSession();
+    if (!session) { location.href='index.html'; return; }
+    const me = DB.getUsers().find(u => (u.email||'').toLowerCase() === session);
+    if (me) document.getElementById('myAvatar').src = me.avatar || 'avatar-default.png';
+
+    const bgOptions = document.getElementById('bgOptions');
+    const swatches = Array.from(bgOptions.querySelectorAll('.bg-swatch'));
+    let selectedColor = swatches[0].dataset.color;
+    swatches[0].classList.add('selected');
+    const statusPreview = document.getElementById('statusPreview');
+    const previewText = document.getElementById('previewText');
+    const statusText = document.getElementById('statusText');
+    const statusFile = document.getElementById('statusFile');
+    const statusFilePreview = document.getElementById('statusFilePreview');
+
+    swatches.forEach(s => s.addEventListener('click', ()=> {
+      swatches.forEach(x=>x.classList.remove('selected'));
+      s.classList.add('selected');
+      selectedColor = s.dataset.color;
+      statusPreview.style.background = selectedColor;
+    }));
+
+    statusText.addEventListener('input', ()=> previewText.textContent = statusText.value);
+
+    statusFile.addEventListener('change', (e)=> {
+      statusFilePreview.innerHTML = '';
+      const f = e.target.files && e.target.files[0];
+      if (!f) return;
+      const reader = new FileReader();
+      reader.onload = ()=> {
+        const url = reader.result;
+        if (f.type.startsWith('image/')) {
+          const img = document.createElement('img'); img.src = url; statusFilePreview.appendChild(img);
+        } else if (f.type.startsWith('video/')) {
+          const v = document.createElement('video'); v.src = url; v.controls = true; statusFilePreview.appendChild(v);
+        }
+      };
+      reader.readAsDataURL(f);
+    });
+
+    document.getElementById('publishStatus').addEventListener('click', ()=> {
+      const text = statusText.value.trim();
+      const fileInput = statusFile;
+      let fileData = null;
+      if (fileInput.files && fileInput.files[0]) {
+        const f = fileInput.files[0];
+        const reader = new FileReader();
+        reader.onload = ()=> {
+          fileData = { type: f.type, data: reader.result };
+          saveStatus(text, selectedColor, fileData);
+        };
+        reader.readAsDataURL(f);
+      } else {
+        saveStatus(text, selectedColor, null);
+      }
+    });
+
+    function saveStatus(text, bg, file) {
+      const statuses = DB.getStatuses();
+      const s = {
+        id: 's'+Date.now(),
+        authorEmail: session,
+        text: text || '',
+        bgColor: bg,
+        image: file && file.type.startsWith('image/') ? file.data : null,
+        video: file && file.type.startsWith('video/') ? file.data : null,
+        time: new Date().toISOString(),
+        expiresAt: new Date(Date.now() + 24*60*60*1000).toISOString() // expira em 24h
+      };
+      statuses.unshift(s);
+      DB.saveStatuses(statuses);
+      alert('Status publicado!');
+      location.href = 'feed.html';
+    }
+  })();
+  </script>
+</body>
+</html>

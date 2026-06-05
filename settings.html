@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Book-face — Definições</title>
+  <link rel="stylesheet" href="base.css" />
+  <style>
+    :root{
+      --bg:#0f172a10;
+      --card:#ffffff;
+      --accent:#ff6b6b;
+      --accent-2:#6b8cff;
+      --accent-3:#00d4a6;
+      --muted:#6b7280;
+      --glass: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.85));
+    }
+    body{font-family:Inter,system-ui,Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#f7fbff,#eef7ff);margin:0;color:#071133}
+    .topbar{background:var(--card);box-shadow:0 6px 24px rgba(11,92,173,0.06);position:sticky;top:0;z-index:60}
+    .topbar-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;gap:12px}
+    .logo{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--accent-2)}
+    .nav-center{display:flex;gap:10px;align-items:center;flex:1;justify-content:center}
+    .nav-btn{background:transparent;border:none;padding:8px 10px;border-radius:10px;cursor:pointer;font-size:18px}
+    .nav-btn.active{background:rgba(107,140,255,0.12)}
+    .search-row{max-width:1100px;margin:14px auto;padding:10px 14px;display:flex;gap:10px;align-items:center}
+    .search-input{flex:1;padding:12px;border-radius:999px;border:1px solid #e6eef6;background:#fff;box-shadow:0 6px 18px rgba(11,92,173,0.03)}
+    .container{max-width:1100px;margin:12px auto;padding:12px;display:grid;grid-template-columns:1fr 360px;gap:16px}
+    .card{background:var(--card);border-radius:14px;padding:16px;box-shadow:0 12px 30px rgba(11,92,173,0.06)}
+    h2,h3{color:#07204a}
+    .muted{color:var(--muted)}
+    .result-item{display:flex;align-items:center;justify-content:space-between;padding:10px;border-radius:10px}
+    .result-left{display:flex;gap:12px;align-items:center}
+    .avatar-sm{width:52px;height:52px;border-radius:10px;object-fit:cover}
+    .btn.small{padding:8px 12px;border-radius:10px;background:var(--accent-2);color:#fff;border:none;cursor:pointer}
+    .btn.ghost{background:transparent;border:1px solid #e6eef6;color:#071133}
+    .no-results{color:var(--muted);padding:12px}
+    @media (max-width:980px){ .container{grid-template-columns:1fr} .search-row{padding:8px} }
+  </style>
+</head>
+<body>
+  <script src="storage.js"></script>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div class="logo"><img src="logo.png" alt="" style="height:34px"> <span>Book-face</span></div>
+
+      <nav class="nav-center" role="navigation" aria-label="Navegação principal">
+        <button class="nav-btn" data-target="feed.html" id="nav-home">🏠</button>
+        <button class="nav-btn" data-target="friend_requests.html" id="nav-requests">👥</button>
+        <button class="nav-btn" data-target="messages.html" id="nav-messages">💬</button>
+        <button class="nav-btn active" data-target="settings.html" id="nav-settings">⚙️</button>
+        <button class="nav-btn profile-btn" data-target="profile.html" id="nav-profile">👤</button>
+      </nav>
+
+      <div style="width:120px"></div>
+    </div>
+  </header>
+
+  <div class="search-row">
+    <input id="globalSearch" class="search-input" placeholder="Pesquisar por nome ou email (ex.: João)">
+    <button id="searchBtn" class="btn small">Pesquisar</button>
+  </div>
+
+  <main class="container">
+    <section class="card">
+      <h2>Definições da conta</h2>
+      <p class="muted">Acede ao teu perfil, altera senha, edita biografia, nome e nacionalidade.</p>
+
+      <div style="display:flex;gap:12px;margin-top:14px;flex-wrap:wrap">
+        <button id="openProfile" class="btn small">Ver meu perfil</button>
+        <button id="changePassword" class="btn ghost">Mudar senha</button>
+      </div>
+
+      <hr style="margin:18px 0;border:none;border-top:1px solid #f1f5ff">
+
+      <h3>Resultados da pesquisa</h3>
+      <div id="searchResults" style="margin-top:10px">
+        <div class="no-results">Faz uma pesquisa para ver utilizadores aqui.</div>
+      </div>
+    </section>
+
+    <aside>
+      <div class="card">
+        <h3>Atalhos</h3>
+        <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px">
+          <a class="btn small" href="edit_bio.html">Editar Biografia</a>
+          <a class="btn small" href="edit_name.html">Editar Nome</a>
+          <a class="btn small" href="edit_nationality.html">Editar Nacionalidade</a>
+          <a class="btn small" href="change_password.html">Mudar Senha</a>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:12px">
+        <h3>Ajuda rápida</h3>
+        <p class="muted">Pesquisa por nome ou email. Clica em "Ver perfil" para abrir o perfil do utilizador.</p>
+      </div>
+    </aside>
+  </main>
+
+  <script>
+  (function(){
+    // navigation
+    document.querySelectorAll('.nav-btn').forEach(b => b.addEventListener('click', ()=> {
+      const t = b.getAttribute('data-target'); if (t) location.href = t;
+    }));
+
+    // ensure DB
+    if (!window.DB) { alert('Erro: DB não carregado. Verifica storage.js'); }
+
+    const session = DB.getSession();
+    const me = DB.getUsers().find(u => (u.email||'').toLowerCase() === session);
+
+    document.getElementById('openProfile').addEventListener('click', ()=> {
+      if (!me) return alert('Sessão não encontrada.');
+      location.href = `profile.html?user=${encodeURIComponent(me.email)}`;
+    });
+    document.getElementById('changePassword').addEventListener('click', ()=> location.href='change_password.html');
+
+    // search logic
+    const input = document.getElementById('globalSearch');
+    const btn = document.getElementById('searchBtn');
+    const results = document.getElementById('searchResults');
+
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+
+    function renderResults(list){
+      results.innerHTML = '';
+      if (!list || !list.length) { results.innerHTML = '<div class="no-results">Nenhum utilizador encontrado.</div>'; return; }
+      list.forEach(u => {
+        const div = document.createElement('div'); div.className = 'result-item';
+        div.innerHTML = `<div class="result-left"><img src="${escapeHtml(u.avatar||'avatar-default.png')}" class="avatar-sm"><div><strong>${escapeHtml(u.name)}</strong><div class="muted">${escapeHtml(u.email)}</div></div></div><div><button class="btn small viewProfile" data-email="${escapeHtml(u.email)}">Ver perfil</button></div>`;
+        results.appendChild(div);
+      });
+      results.querySelectorAll('.viewProfile').forEach(b => b.addEventListener('click', ()=> {
+        const email = b.getAttribute('data-email');
+        location.href = `profile.html?user=${encodeURIComponent(email)}`;
+      }));
+    }
+
+    function doSearch(q){
+      q = (q||'').trim().toLowerCase();
+      if (!q) { renderResults([]); return; }
+      const users = DB.getUsers() || [];
+      const found = users.filter(u => {
+        const name = (u.name||'').toLowerCase();
+        const email = (u.email||'').toLowerCase();
+        return name.includes(q) || email.includes(q);
+      });
+      renderResults(found);
+    }
+
+    btn.addEventListener('click', ()=> doSearch(input.value));
+    input.addEventListener('keydown', (e)=> { if (e.key === 'Enter') doSearch(input.value); });
+
+    // badges update (simple)
+    function updateBadges(){ /* placeholder if needed */ }
+    updateBadges();
+
+  })();
+  </script>
+</body>
+</html>

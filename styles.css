@@ -1,0 +1,19 @@
+:root{
+  --bg:#f2f4f8; --card:#fff; --accent:#1877f2; --muted:#6b7280;
+  --radius:10px; --maxw:980px;
+}
+*{box-sizing:border-box}
+body{font-family:Inter,system-ui,Arial,sans-serif;background:var(--bg);margin:0;color:#111}
+.topbar{display:flex;justify-content:space-between;align-items:center;padding:12px 20px;background:#fff;box-shadow:0 1px 0 rgba(0,0,0,.06)}
+.logo{height:36px}
+.btn{background:var(--accent);color:#fff;padding:8px 12px;border-radius:8px;text-decoration:none;border:none;cursor:pointer}
+.btn.outline{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn.small{padding:6px 8px;font-size:14px}
+.card{background:var(--card);padding:18px;border-radius:var(--radius);max-width:420px;margin:28px auto;box-shadow:0 6px 18px rgba(16,24,40,.06)}
+.hero{display:flex;gap:20px;align-items:center;max-width:var(--maxw);margin:40px auto;padding:20px}
+.hero-img{width:320px;height:auto}
+.muted{color:var(--muted);font-size:14px}
+.error{color:#b91c1c}
+.layout{display:grid;grid-template-columns:240px 1fr 260px;gap:20px;max-width:1200px;margin:20px auto;padding:0 16px}
+.feed .composer textarea{width:100%;height:80px;padding:10px;border-radius:8px;border:1px solid #e6e9ef}
+.row{display:flex;gap:8px;align-items:center}

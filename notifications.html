@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Book-face — Notificações</title>
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="layout.css" />
+  <link rel="stylesheet" href="components.css" />
+  <style>
+    .centered{max-width:820px;margin:18px auto;padding:12px}
+    .card{background:#fff;border-radius:12px;padding:12px;box-shadow:0 6px 18px rgba(2,6,23,0.06)}
+    .notif{display:flex;gap:12px;padding:10px;border-radius:8px;border-bottom:1px solid #f1f5f9}
+    .notif.unread{background:#eef6ff}
+    .muted{color:#6b7280}
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="left"><a href="feed.html" class="link">Voltar</a></div>
+    <div class="center">Notificações</div>
+    <div class="right"></div>
+  </header>
+
+  <main class="centered">
+    <section class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>Notificações</strong>
+        <div><button id="markAll" class="btn small">Marcar todas como lidas</button> <button id="clearAll" class="btn small danger">Limpar</button></div>
+      </div>
+      <div id="list"></div>
+    </section>
+  </main>
+
+  <script src="storage.js"></script>
+  <script>
+  (function(){
+    const session = DB.getSession(); if (!session) { location.href='index.html'; return; }
+    const list = document.getElementById('list');
+    function render(){
+      const notifs = DB.getNotifications().filter(n => n.to === session);
+      if (!notifs.length) { list.innerHTML = '<div class="muted">Sem notificações.</div>'; return; }
+      list.innerHTML = '';
+      notifs.forEach(n => {
+        const div = document.createElement('div');
+        div.className = 'notif' + (n.read ? '' : ' unread');
+        const fromUser = DB.getUsers().find(u => (u.email||'').toLowerCase() === (n.from||'').toLowerCase()) || { name: n.from, avatar:'avatar-default.png' };
+        div.innerHTML = `<img src="${fromUser.avatar}" style="width:44px;height:44px;border-radius:8px"><div style="flex:1"><strong>${escapeHtml(fromUser.name)}</strong><div class="muted">${escapeHtml(n.text)}</div><div class="muted" style="font-size:12px">${new Date(n.time).toLocaleString()}</div></div><div><button class="btn small viewBtn" data-id="${n.id}">Ver</button></div>`;
+        list.appendChild(div);
+      });
+      // view buttons
+      list.querySelectorAll('.viewBtn').forEach(b => b.addEventListener('click', ()=> {
+        const id = b.getAttribute('data-id');
+        const nots = DB.getNotifications();
+        const n = nots.find(x => x.id === id);
+        if (!n) return;
+        n.read = true;
+        DB.saveNotifications(nots);
+        // navigate based on type meta
+        if (n.meta && n.meta.postId) {
+          location.href = `feed.html`; // open feed; user can find post (or we could pass anchor)
+        } else {
+          // default
+          render();
+        }
+      }));
+    }
+
+    document.getElementById('markAll').addEventListener('click', ()=> {
+      const nots = DB.getNotifications();
+      nots.forEach(n => { if (n.to === session) n.read = true; });
+      DB.saveNotifications(nots);
+      render();
+    });
+    document.getElementById('clearAll').addEventListener('click', ()=> {
+      let nots = DB.getNotifications();
+      nots = nots.filter(n => n.to !== session);
+      DB.saveNotifications(nots);
+      render();
+    });
+
+    function escapeHtml(s){ return String(s||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+    render();
+  })();
+  </script>
+</body>
+</html>

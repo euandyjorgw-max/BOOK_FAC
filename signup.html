@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Book-face — Criar conta</title>
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="layout.css" />
+  <link rel="stylesheet" href="components.css" />
+</head>
+<body>
+  <div class="bg-graphic" aria-hidden="true"></div>
+
+  <main class="centered-page">
+    <section class="login-card" role="region" aria-label="Criar conta">
+      <div class="card-header">
+        <img src="logo.png" alt="Book-face logo" class="logo-img">
+        <div class="subtitle">CRIAR CONTA</div>
+      </div>
+
+      <form id="signupForm" class="form" autocomplete="on" novalidate>
+        <label class="label" for="name">Nome completo</label>
+        <input id="name" type="text" placeholder="Seu nome" required>
+
+        <label class="label" for="email">Email</label>
+        <input id="email" type="email" placeholder="seu@email.com" required>
+
+        <label class="label" for="password">Senha</label>
+        <input id="password" type="password" placeholder="Senha" required>
+
+        <label class="label" for="confirm">Confirmar senha</label>
+        <input id="confirm" type="password" placeholder="Confirmar senha" required>
+
+        <label class="label" for="secCode">Código de segurança (4 dígitos)</label>
+        <div class="row">
+          <input id="secCode" type="text" maxlength="4" placeholder="1234" required>
+          <button id="copyCode" type="button" class="btn small">Copiar código</button>
+        </div>
+
+        <div class="form-row">
+          <button type="submit" class="btn primary large">Criar conta</button>
+        </div>
+
+        <div id="signupMsg" class="msg" role="status" aria-live="polite"></div>
+
+        <div class="footer-links">
+          <span>Já tem conta?</span>
+          <a href="index.html">Entrar</a>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="storage.js"></script>
+  <script src="utils.js"></script>
+  <script src="auth.js"></script>
+  <script>
+    (function(){
+      const sec = document.getElementById('secCode');
+      if (sec && !sec.value) sec.value = Math.floor(1000 + Math.random()*9000).toString();
+      document.getElementById('copyCode').addEventListener('click', () => {
+        navigator.clipboard?.writeText(sec.value).then(()=> {
+          showMsg('signupMsg','Código copiado para a área de transferência');
+        }).catch(()=> showMsg('signupMsg','Não foi possível copiar'));
+      });
+    })();
+  </script>
+</body>
+</html>

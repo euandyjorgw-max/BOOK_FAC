@@ -1,0 +1,10 @@
+.post{background:var(--card);padding:12px;border-radius:10px;box-shadow:var(--shadow);margin-bottom:12px}
+.post .meta{display:flex;align-items:center;gap:8px}
+.post .meta img{width:40px;height:40px;border-radius:50%}
+.post .content{margin-top:8px}
+.post .actions{display:flex;gap:8px;margin-top:8px}
+.centered{display:flex;align-items:center;justify-content:center}
+.profile-card{display:block}
+.profile-header{display:flex;gap:12px;align-items:center}
+.avatar-large{width:84px;height:84px;border-radius:12px}
+.muted{color:var(--muted)}

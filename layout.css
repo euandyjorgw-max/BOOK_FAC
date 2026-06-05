@@ -1,0 +1,151 @@
+.reaction-popup {
+  position: absolute;
+  display: flex;
+  gap: 8px;
+  background: #fff;
+  padding: 6px 8px;
+  border-radius: 999px;
+  box-shadow: 0 6px 18px rgba(2,6,23,0.12);
+  z-index: 9999;
+  transform-origin: bottom center;
+}
+.reaction-popup button {
+  background: transparent;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+.reaction-popup button:hover { transform: translateY(-4px); }
+
+.bg-graphic{position:fixed;inset:0;z-index:0;overflow:hidden}
+.bg-graphic svg{width:120%;height:120%;transform:translate(-5%,-5%);filter:blur(6px);}
+
+.login-card{
+  position:relative;z-index:2;width:100%;max-width:420px;
+  background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(255,255,255,0.95));
+  border-radius:var(--radius);box-shadow:var(--shadow);padding:26px;backdrop-filter: blur(6px);
+}
+.card-header{text-align:center;margin-bottom:12px}
+.subtitle{font-size:13px;color:var(--muted);letter-spacing:1px;margin-top:6px}
+
+.form{display:flex;flex-direction:column;gap:8px}
+.label{font-size:13px;color:var(--muted);margin-top:6px}
+input[type="email"], input[type="password"], input[type="text"], textarea{
+  width:100%;padding:12px;border-radius:10px;border:1px solid #e6eef6;background:#fff;font-size:15px;outline:none;
+}
+input:focus, textarea:focus{box-shadow:0 4px 12px rgba(11,116,209,0.12);border-color:#bfe0ff}
+
+.row{display:flex;align-items:center;gap:8px}
+.between{justify-content:space-between;align-items:center;margin-top:6px}
+
+.checkbox{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--muted)}
+.checkbox input{width:16px;height:16px}
+
+.form-row{margin-top:12px}
+.btn{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:10px;border:1px solid rgba(0,0,0,0.06);cursor:pointer;background:#fff}
+.btn.primary{background:var(--primary);color:#fff;border:none}
+.btn.small{padding:6px 8px;font-size:13px}
+.btn.large{width:100%;font-weight:600;font-size:15px}
+
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:10px 16px;background:var(--card);box-shadow:var(--shadow);position:sticky;top:0;z-index:10}
+.container{display:flex;gap:16px;padding:16px;max-width:1100px;margin:0 auto}
+.sidebar{width:200px}
+.right-col{width:260px}
+.main-col{flex:1}
+.search{width:100%;padding:8px;border-radius:8px;border:1px solid #e6e9ee}
+.create-post textarea{min-height:80px;border:none;resize:none}
+.feed .post{margin-bottom:12px}
+
+.single-col{max-width:800px;margin:20px auto;padding:0 12px}
+
+@media (max-width:900px){
+  .container{flex-direction:column;padding:12px}
+  .sidebar,.right-col{display:none}
+}
+
+/* Top navigation estilo Facebook-like */
+.nav-topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--card);box-shadow:var(--shadow);position:sticky;top:0;z-index:50}
+.nav-left{display:flex;align-items:center;gap:12px}
+.nav-center{display:flex;gap:6px;align-items:center;flex:1;justify-content:center}
+.nav-btn{background:transparent;border:none;padding:8px 12px;border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:#0b3f6b;font-weight:600}
+.nav-btn:hover{background:rgba(11,116,209,0.06)}
+.nav-btn.active{background:rgba(11,116,209,0.12);color:var(--primary)}
+.nav-icon{font-size:18px;line-height:1}
+.nav-label{font-size:12px}
+.nav-badge{min-width:20px;height:20px;background:#e11d48;color:#fff;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;font-size:12px;margin-left:6px}
+.profile-btn{display:flex;align-items:center;gap:8px}
+.nav-avatar{width:32px;height:32px;border-radius:8px;object-fit:cover}
+.nav-right{display:flex;align-items:center;gap:8px}
+.top-search{padding:8px 10px;border-radius:999px;border:1px solid #e6eef6;min-width:160px}
+
+/* mobile: compactar ícones e esconder labels */
+@media (max-width:640px){
+  .nav-center{gap:4px}
+  .nav-btn{padding:8px 8px}
+  .nav-label{display:none}
+  .top-search{display:none}
+}
+
+/* Espaçamento maior entre botões da nav superior */
+.nav-center {
+  display: flex;
+  gap: 18px;            /* aumenta o espaço horizontal entre botões */
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+}
+
+/* Aumenta o padding interno dos botões para toque mais confortável */
+.nav-btn {
+  padding: 1px 1px;   /* mais espaço interno horizontal e vertical */
+  border-radius: 10px;
+  transition: background-color 160ms ease, transform 120ms ease;
+}
+
+/* Pequeno efeito ao passar o cursor ou tocar */
+.nav-btn:hover,
+.nav-btn:active {
+  transform: translateY(-2px);
+  background: rgba(11,116,209,0.06);
+}
+
+/* Aumenta a distância entre ícone e label */
+.nav-icon { margin-bottom: 6px; }
+
+/* Em telas pequenas, mantém espaçamento mas evita sobreposição */
+@media (max-width:640px) {
+  .nav-center { gap: 10px; }
+  .nav-btn { padding: 10px 10px; }
+  .nav-avatar { width: 36px; height: 36px; }
+  .top-search { display: none; }
+}
+
+/* Opcional: separador visual entre grupos de botões (ex.: entre navegação e perfil) */
+.nav-center .nav-btn.profile-btn {
+  margin-left: 12px;
+  padding-left: 18px;
+  border-left: 1px solid rgba(11,116,209,0.06);
+}
+
+/* Barra superior: espaçamento compacto entre ícones */
+.nav-topbar { display:flex; align-items:center; justify-content:space-between; padding:8px 12px; background:var(--card); z-index:60; }
+.nav-center { display:flex; gap:8px; align-items:center; justify-content:center; flex:1; }
+.nav-btn { background:transparent; border:none; padding:6px 8px; border-radius:8px; cursor:pointer; font-size:18px; display:inline-flex; align-items:center; justify-content:center; position:relative; }
+.nav-btn:hover { background:rgba(11,116,209,0.06); transform:translateY(-1px); }
+.nav-btn.active { background:rgba(11,116,209,0.10); color:var(--primary); }
+
+.nav-avatar { width:30px; height:30px; border-radius:8px; object-fit:cover; display:block; }
+.nav-right { display:flex; align-items:center; gap:8px; }
+.top-search { padding:8px 10px; border-radius:999px; border:1px solid #e6eef6; min-width:140px; }
+
+/* Badges */
+.nav-badge { min-width:18px; height:18px; background:#e11d48; color:#fff; border-radius:999px; display:inline-flex; align-items:center; justify-content:center; font-size:12px; padding:0 6px; margin-left:6px; }
+
+/* Mobile: manter toque confortável */
+@media (max-width:640px){
+  .nav-center { gap:6px; }
+  .nav-btn { padding:8px; font-size:16px; }
+  .top-search { display:none; }
+}

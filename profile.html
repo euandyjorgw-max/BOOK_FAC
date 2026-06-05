@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Book-face — Perfil</title>
+  <link rel="stylesheet" href="base.css" />
+  <style>
+    :root{
+      --bg:linear-gradient(180deg,#fff8f0,#fff0f6);
+      --card:#ffffff;
+      --accent:#ff6b6b;
+      --accent-2:#6b8cff;
+      --accent-3:#00d4a6;
+      --muted:#6b7280;
+    }
+    body{font-family:Inter,system-ui,Arial,Helvetica,sans-serif;background:var(--bg);margin:0;color:#071133}
+    .topbar{background:var(--card);box-shadow:0 8px 30px rgba(11,92,173,0.06);position:sticky;top:0;z-index:60}
+    .topbar-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 18px}
+    .container{max-width:1000px;margin:18px auto;padding:12px}
+    .profile-card{display:flex;gap:18px;align-items:center;background:var(--card);padding:18px;border-radius:14px;box-shadow:0 12px 30px rgba(11,92,173,0.06)}
+    .avatar{width:120px;height:120px;border-radius:14px;object-fit:cover;border:4px solid #fff}
+    .profile-info{flex:1}
+    .profile-actions{display:flex;gap:10px;margin-top:12px;flex-wrap:wrap}
+    .btn{padding:8px 12px;border-radius:10px;border:none;cursor:pointer}
+    .btn.primary{background:var(--accent-2);color:#fff}
+    .btn.ghost{background:transparent;border:1px solid #e6eef6;color:#071133}
+    .btn.accent{background:var(--accent);color:#fff}
+    .muted{color:var(--muted)}
+    .posts{margin-top:18px;display:flex;flex-direction:column;gap:12px;align-items:center}
+    .post-card{width:100%;max-width:720px;background:var(--card);padding:12px;border-radius:10px;box-shadow:0 8px 20px rgba(11,92,173,0.04)}
+    .post-media img{max-width:100%;border-radius:8px;display:block;margin-top:10px}
+    .centered-title{display:flex;align-items:center;gap:8px;justify-content:center;margin-bottom:8px}
+    .small-muted{font-size:13px;color:var(--muted)}
+    @media (max-width:760px){ .profile-card{flex-direction:column;align-items:flex-start} .avatar{width:96px;height:96px} .posts{padding:0 12px} }
+  </style>
+</head>
+<body>
+  <script src="storage.js"></script>
+
+  <header class="topbar">
+    <div class="topbar-inner">
+      <div><a href="feed.html" class="link">Início</a></div>
+      <div style="font-weight:800;color:var(--accent-2)">Perfil</div>
+      <div></div>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="profileArea"></div>
+
+    <section id="userPosts" class="posts"></section>
+  </main>
+
+  <script>
+  (function(){
+    function escapeHtml(s){ return String(s||''); }
+    function qs(name){ return new URLSearchParams(location.search).get(name); }
+
+    if (!window.DB) { alert('Erro: DB não carregado.'); }
+
+    const session = DB.getSession();
+    const paramEmail = qs('user') || session;
+    if (!paramEmail) { document.getElementById('profileArea').innerHTML = '<div class="muted">Utilizador não especificado.</div>'; return; }
+
+    const users = DB.getUsers() || [];
+    const user = users.find(u => (u.email||'').toLowerCase() === (paramEmail||'').toLowerCase());
+    if (!user) { document.getElementById('profileArea').innerHTML = '<div class="muted">Utilizador não encontrado.</div>'; return; }
+
+    const isMe = session && (session.toLowerCase() === (user.email||'').toLowerCase());
+    const profileArea = document.getElementById('profileArea');
+
+    profileArea.innerHTML = `
+      <div class="profile-card">
+        <img src="${escapeHtml(user.avatar||'avatar-default.png')}" class="avatar" id="profileAvatar" alt="Avatar">
+        <div class="profile-info">
+          <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap">
+            <h2 style="margin:0">${escapeHtml(user.name || 'Sem nome')}</h2>
+            <div class="small-muted">${escapeHtml(user.email)}</div>
+          </div>
+          <div class="small-muted" style="margin-top:8px">Nacionalidade: <strong id="natText">${escapeHtml(user.nationality || 'Não definida')}</strong></div>
+          <div style="margin-top:12px">${escapeHtml(user.bio || 'Sem biografia')}</div>
+          <div class="profile-actions">
+            <button id="bioBtn" class="btn primary">Biografia</button>
+            <button id="nameBtn" class="btn primary">Nome</button>
+            <button id="natBtn" class="btn primary">Nacionalidade</button>
+            ${isMe ? '<button id="uploadAvatar" class="btn ghost">Alterar foto</button>' : ''}
+          </div>
+        </div>
+      </div>
+    `;
+
+    // render posts centered
+    function renderPosts(){
+      const posts = DB.getPosts() || [];
+      const myPosts = posts.filter(p => (p.authorEmail||'').toLowerCase() === (user.email||'').toLowerCase()).sort((a,b)=> new Date(b.time) - new Date(a.time));
+      const postsEl = document.getElementById('userPosts');
+      postsEl.innerHTML = `<div class="centered-title"><h3>Publicações de ${escapeHtml(user.name)}</h3></div>`;
+      if (!myPosts.length) { postsEl.innerHTML += '<div class="muted">Sem publicações.</div>'; return; }
+      myPosts.forEach(p => {
+        const mediaHtml = p.image ? `<div class="post-media"><img src="${escapeHtml(p.image)}" alt="foto"></div>` : (p.video ? `<div class="post-media"><video src="${escapeHtml(p.video)}" controls style="width:100%;border-radius:8px"></video></div>` : '');
+        const reactionSummary = p.reactions ? Object.entries(p.reactions).map(([k,v]) => `${k}: ${v}`).join(' • ') : '';
+        const postHtml = `
+          <article class="post-card">
+            <div style="display:flex;gap:10px;align-items:center">
+              <img src="${escapeHtml(p.avatar||'avatar-default.png')}" style="width:44px;height:44px;border-radius:8px">
+              <div>
+                <strong>${escapeHtml(p.name)}</strong>
+                <div class="small-muted" style="font-size:12px">${new Date(p.time).toLocaleString()}</div>
+              </div>
+            </div>
+            <div style="margin-top:10px">${escapeHtml(p.text || '')}</div>
+            ${mediaHtml}
+            <div class="small-muted" style="margin-top:8px">${escapeHtml(reactionSummary)}</div>
+          </article>
+        `;
+        postsEl.innerHTML += postHtml;
+      });
+    }
+
+    renderPosts();
+
+    // navigation to edit pages
+    document.getElementById('bioBtn').addEventListener('click', ()=> location.href = `edit_bio.html?user=${encodeURIComponent(user.email)}`);
+    document.getElementById('nameBtn').addEventListener('click', ()=> location.href = `edit_name.html?user=${encodeURIComponent(user.email)}`);
+    document.getElementById('natBtn').addEventListener('click', ()=> location.href = `edit_nationality.html?user=${encodeURIComponent(user.email)}`);
+
+    // avatar upload: when user changes avatar, save avatar, update user, create a photo post visible to all
+    const uploadBtn = document.getElementById('uploadAvatar');
+    if (uploadBtn) {
+      uploadBtn.addEventListener('click', ()=> {
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        fileInput.accept = 'image/*';
+        fileInput.addEventListener('change', (ev) => {
+          const f = ev.target.files[0];
+          if (!f) return;
+          const reader = new FileReader();
+          reader.onload = function(e){
+            // update user avatar
+            const users = DB.getUsers();
+            const idx = users.findIndex(u => (u.email||'').toLowerCase() === (user.email||'').toLowerCase());
+            if (idx === -1) return alert('Erro ao atualizar avatar.');
+            users[idx].avatar = e.target.result;
+            DB.saveUsers(users);
+
+            // update all posts' avatar and author name if needed (keep authorEmail)
+            const posts = DB.getPosts() || [];
+            for (let i=0;i<posts.length;i++){
+              if ((posts[i].authorEmail||'').toLowerCase() === (user.email||'').toLowerCase()){
+                posts[i].avatar = e.target.result;
+                // keep posts[i].name as is (name changes handled in name edit)
+              }
+            }
+            DB.savePosts(posts);
+
+            // create a new photo post (public) representing the profile photo upload
+            const me = users[idx];
+            const newPost = {
+              id: 'p' + Date.now() + Math.floor(Math.random()*999),
+              authorEmail: me.email,
+              name: me.name,
+              avatar: me.avatar,
+              text: 'Atualizou a foto de perfil',
+              image: e.target.result,
+              video: null,
+              time: new Date().toISOString(),
+              reactions: {}, userReactions: {}, comments: [], privacy: 'public'
+            };
+            const allPosts = DB.getPosts() || [];
+            allPosts.unshift(newPost);
+            DB.savePosts(allPosts);
+
+            alert('Foto de perfil atualizada e publicada.');
+            // reload to reflect changes
+            location.reload();
+          };
+          reader.readAsDataURL(f);
+        });
+        fileInput.click();
+      });
+    }
+
+  })();
+  </script>
+</body>
+</html>

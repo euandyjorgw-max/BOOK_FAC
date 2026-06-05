@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Editar Biografia</title>
+  <link rel="stylesheet" href="base.css" />
+  <style>
+    :root{--accent-2:#6b8cff;--card:#fff;--muted:#6b7280}
+    body{font-family:Inter,system-ui,Arial,Helvetica,sans-serif;background:linear-gradient(180deg,#f7fbff,#eef7ff);margin:0;color:#071133}
+    header{background:var(--card);box-shadow:0 6px 24px rgba(11,92,173,0.06);position:sticky;top:0;padding:12px}
+    .container{max-width:720px;margin:18px auto;padding:12px}
+    .card{background:var(--card);padding:16px;border-radius:12px;box-shadow:0 12px 30px rgba(11,92,173,0.06)}
+    textarea{width:100%;min-height:160px;padding:12px;border-radius:10px;border:1px solid #e6eef6}
+    .actions{display:flex;gap:10px;margin-top:12px}
+    .btn.primary{background:var(--accent-2);color:#fff;padding:10px 14px;border-radius:10px;border:none}
+    .btn.ghost{background:transparent;border:1px solid #e6eef6;padding:10px 14px;border-radius:10px}
+  </style>
+</head>
+<body>
+  <script src="storage.js"></script>
+
+  <header><div style="display:flex;align-items:center;justify-content:space-between"><a href="#" onclick="history.back();return false">Voltar</a><strong>Editar Biografia</strong><div></div></div></header>
+
+  <main class="container">
+    <section class="card">
+      <div id="info"></div>
+      <div style="margin-top:12px">
+        <label for="bio">Biografia</label>
+        <textarea id="bio" placeholder="Escreve algo sobre ti..."></textarea>
+      </div>
+      <div class="actions">
+        <button id="save" class="btn primary">Guardar</button>
+        <button id="cancel" class="btn ghost">Cancelar</button>
+      </div>
+      <div id="msg" style="margin-top:12px;color:#b91c1c"></div>
+    </section>
+  </main>
+
+  <script>
+  (function(){
+    function qs(n){ return new URLSearchParams(location.search).get(n); }
+    if (!window.DB) { alert('DB não carregado'); }
+
+    const email = qs('user') || DB.getSession();
+    if (!email) { alert('Utilizador não especificado'); location.href='feed.html'; }
+
+    const users = DB.getUsers();
+    const idx = users.findIndex(u => (u.email||'').toLowerCase() === (email||'').toLowerCase());
+    if (idx === -1) { alert('Utilizador não encontrado'); location.href='feed.html'; }
+    const user = users[idx];
+
+    document.getElementById('info').innerHTML = `<div><strong>${user.name}</strong> — ${user.email}</div>`;
+    document.getElementById('bio').value = user.bio || '';
+
+    document.getElementById('save').addEventListener('click', ()=> {
+      const val = document.getElementById('bio').value || '';
+      users[idx].bio = val;
+      DB.saveUsers(users);
+      alert('Biografia atualizada.');
+      location.href = `profile.html?user=${encodeURIComponent(user.email)}`;
+    });
+
+    document.getElementById('cancel').addEventListener('click', ()=> history.back());
+  })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Book-face — Mensagens</title>
+
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="layout.css" />
+  <link rel="stylesheet" href="components.css" />
+
+  <style>
+    .messages-panel{max-width:1100px;margin:12px auto;padding:12px;display:flex;gap:12px}
+    .conversations-list{width:320px;background:var(--card);border-radius:12px;padding:8px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:8px;min-height:60vh}
+    .conv-item{display:flex;align-items:center;gap:10px;padding:8px;border-radius:10px;cursor:pointer}
+    .conv-item:hover{background:#f3f6fb}
+    .conv-avatar{width:52px;height:52px;border-radius:10px;object-fit:cover;flex:0 0 52px}
+    .conv-meta{flex:1;min-width:0}
+    .conv-meta strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .conv-meta .muted{font-size:13px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .conv-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+    .badge-unread{background:#e11d48;color:#fff;padding:4px 8px;border-radius:999px;font-size:12px}
+
+    .chat-area{flex:1;background:var(--card);border-radius:12px;padding:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;min-height:60vh}
+    .chat-header{display:flex;align-items:center;gap:12px;border-bottom:1px solid #eef3fb;padding-bottom:8px}
+    .chat-header .back-btn{display:none}
+    .chat-messages{flex:1;overflow:auto;padding:12px;display:flex;flex-direction:column;gap:10px}
+    .msg-row{max-width:75%;padding:10px;border-radius:12px;box-shadow:0 6px 18px rgba(2,6,23,0.06);word-break:break-word}
+    .msg-me{align-self:flex-end;background:var(--primary);color:#fff;border-bottom-right-radius:4px}
+    .msg-other{align-self:flex-start;background:#f3f4f6;color:#111}
+    .msg-meta{font-size:12px;color:var(--muted);margin-top:6px}
+    .msg-image{max-width:240px;border-radius:8px;display:block;margin-top:8px}
+
+    .chat-input{display:flex;gap:8px;padding-top:8px;border-top:1px solid #eef3fb;margin-top:8px;align-items:center}
+    .chat-input input[type="text"]{flex:1;padding:10px;border-radius:10px;border:1px solid #e6eef6}
+    .chat-input button{padding:10px 14px;border-radius:10px;border:none;background:var(--primary);color:#fff;cursor:pointer}
+    .chat-input .file-btn{background:#fff;border:1px solid #e6eef6;color:#111;padding:8px;border-radius:8px}
+
+    .seen-indicator{font-size:12px;color:var(--muted);display:flex;align-items:center;gap:6px;margin-top:6px}
+    .seen-avatar{width:18px;height:18px;border-radius:50%;object-fit:cover}
+
+    .modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,0.35);display:none;align-items:center;justify-content:center;z-index:120}
+    .modal{width:100%;max-width:520px;background:var(--card);border-radius:12px;padding:12px;box-shadow:var(--shadow)}
+    .search-results{max-height:320px;overflow:auto;display:flex;flex-direction:column;gap:8px;margin-top:8px}
+
+    @media (max-width:900px){
+      .messages-panel{flex-direction:column;padding:8px}
+      .conversations-list{width:100%;order:1}
+      .chat-area{order:2}
+      .chat-header .back-btn{display:inline-flex}
+    }
+  </style>
+</head>
+<body>
+
+  <header class="topbar nav-topbar">
+    <div class="nav-left"><img src="logo.png" alt="Book-face" class="logo-small"></div>
+    <nav class="nav-center" role="navigation" aria-label="Navegação principal">
+      <button class="nav-btn" data-target="feed.html" id="nav-home"><span class="nav-icon">🏠</span><span class="nav-label">Início</span></button>
+      <button class="nav-btn" data-target="friend_requests.html" id="nav-requests"><span class="nav-icon">👥</span><span class="nav-label">Pedidos</span><span class="nav-badge" id="badge-requests"></span></button>
+      <button class="nav-btn active" data-target="messages.html" id="nav-messages"><span class="nav-icon">💬</span><span class="nav-label">Mensagens</span><span class="nav-badge" id="badge-messages"></span></button>
+      <button class="nav-btn" data-target="notifications.html" id="nav-notifs"><span class="nav-icon">🔔</span><span class="nav-label">Notificações</span><span class="nav-badge" id="badge-notifs"></span></button>
+      <button class="nav-btn profile-btn" data-target="profile.html" id="nav-profile"><img src="avatar-default.png" alt="Perfil" class="nav-avatar"><span class="nav-label">Perfil</span></button>
+    </nav>
+    <div class="nav-right"><input id="topSearch" class="top-search" placeholder="Pesquisar no Book-face"></div>
+  </header>
+
+  <main class="messages-panel">
+    <aside class="conversations-list" id="conversationsList" aria-label="Conversas">
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 4px">
+        <strong>Mensagens</strong>
+        <button id="newConvBtn" class="btn small">Nova</button>
+      </div>
+      <div id="convItems" style="display:flex;flex-direction:column;gap:6px;padding-top:6px"></div>
+    </aside>
+
+    <section class="chat-area" id="chatArea" aria-live="polite">
+      <div class="chat-header">
+        <button class="btn small back-btn" id="backToList">Voltar</button>
+        <img id="chatAvatar" src="avatar-default.png" alt="" style="width:48px;height:48px;border-radius:10px;object-fit:cover">
+        <div style="flex:1">
+          <strong id="chatName">Selecione uma conversa</strong>
+          <div class="muted" id="chatSub">Última mensagem</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button id="openProfileBtn" class="btn small">Ver perfil</button>
+        </div>
+      </div>
+
+      <div class="chat-messages" id="chatMessages">
+        <div class="muted">Selecione uma conversa à esquerda para ver mensagens.</div>
+      </div>
+
+      <div class="chat-input" id="chatInputWrap" style="display:none">
+        <input id="msgText" type="text" placeholder="Escreva uma mensagem...">
+        <label class="file-btn btn small" title="Anexar imagem">
+          📎
+          <input id="msgFile" type="file" accept="image/*" style="display:none">
+        </label>
+        <button id="sendMsgBtn">Enviar</button>
+      </div>
+    </section>
+  </main>
+
+  <div class="modal-backdrop" id="modalBackdrop" role="dialog" aria-modal="true">
+    <div class="modal" role="document" aria-label="Nova conversa">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>Iniciar conversa</strong>
+        <button id="closeModal" class="btn small">Fechar</button>
+      </div>
+
+      <div style="margin-top:8px">
+        <input id="modalSearch" placeholder="Pesquisar por nome ou email" style="width:100%;padding:10px;border-radius:8px;border:1px solid #e6eef6">
+        <div class="search-results" id="modalResults"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="storage.js"></script>
+  <script src="utils.js"></script>
+  <script src="friends.js"></script>
+
+  <script>
+  (function(){
+    function escapeHtml(str){ return String(str||'').replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]); }
+    const session = DB.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+
+    const convItems = document.getElementById('convItems');
+    const chatMessages = document.getElementById('chatMessages');
+    const chatName = document.getElementById('chatName');
+    const chatSub = document.getElementById('chatSub');
+    const chatAvatar = document.getElementById('chatAvatar');
+    const chatInputWrap = document.getElementById('chatInputWrap');
+    const msgText = document.getElementById('msgText');
+    const msgFile = document.getElementById('msgFile');
+    const sendMsgBtn = document.getElementById('sendMsgBtn');
+    const backToList = document.getElementById('backToList');
+
+    const newConvBtn = document.getElementById('newConvBtn');
+    const modalBackdrop = document.getElementById('modalBackdrop');
+    const modalSearch = document.getElementById('modalSearch');
+    const modalResults = document.getElementById('modalResults');
+    const closeModal = document.getElementById('closeModal');
+
+    let currentConvId = null;
+
+    function loadConversations() {
+      const convs = DB.getConversations() || [];
+      const myConvs = convs.filter(c => Array.isArray(c.members) && c.members.length === 2 && c.members.includes(session));
+      myConvs.sort((a,b) => {
+        const at = a.messages && a.messages.length ? new Date(a.messages[a.messages.length-1].time).getTime() : 0;
+        const bt = b.messages && b.messages.length ? new Date(b.messages[b.messages.length-1].time).getTime() : 0;
+        return bt - at;
+      });
+      renderConvList(myConvs);
+      updateBadges();
+    }
+
+    function renderConvList(convs) {
+      convItems.innerHTML = '';
+      const users = DB.getUsers();
+      if (!convs.length) {
+        convItems.innerHTML = '<div class="muted" style="padding:8px">Sem conversas. Use "Nova" para iniciar uma conversa com um utilizador.</div>';
+        return;
+      }
+      convs.forEach(conv => {
+        const other = conv.members.find(m => m !== session);
+        const user = users.find(u => (u.email||'').toLowerCase() === (other||'').toLowerCase()) || { name: other, email: other, avatar:'avatar-default.png' };
+        const lastMsg = conv.messages && conv.messages.length ? conv.messages[conv.messages.length-1] : null;
+        const unread = conv.messages ? conv.messages.filter(m => m.to === session && !m.read).length : 0;
+
+        const item = document.createElement('div');
+        item.className = 'conv-item';
+        item.innerHTML = `
+          <img class="conv-avatar" src="${user.avatar||'avatar-default.png'}" alt="">
+          <div class="conv-meta">
+            <strong>${escapeHtml(user.name)}</strong>
+            <div class="muted">${lastMsg ? escapeHtml(lastMsg.text ? lastMsg.text.slice(0,60) : (lastMsg.image ? '[imagem]' : '')) : 'Sem mensagens ainda'}</div>
+          </div>
+          <div class="conv-right">
+            <div class="muted" style="font-size:12px">${lastMsg ? new Date(lastMsg.time).toLocaleTimeString() : ''}</div>
+            ${unread ? `<div class="badge-unread">${unread}</div>` : ''}
+          </div>
+        `;
+        item.addEventListener('click', ()=> openConversation(conv.id));
+        convItems.appendChild(item);
+      });
+    }
+
+    function openConversation(convId) {
+      const convs = DB.getConversations() || [];
+      const conv = convs.find(c => c.id === convId);
+      if (!conv) return;
+      if (!Array.isArray(conv.members) || conv.members.length !== 2 || !conv.members.includes(session)) {
+        alert('Conversa inválida ou sem permissão.');
+        return;
+      }
+
+      const other = conv.members.find(m => m !== session);
+      const users = DB.getUsers();
+      const user = users.find(u => (u.email||'').toLowerCase() === (other||'').toLowerCase()) || { name: other, email: other, avatar:'avatar-default.png' };
+
+      conv.messages = conv.messages || [];
+      conv.messages.forEach(m => { if (m.to === session) m.read = true; });
+      conv.lastSeen = conv.lastSeen || {};
+      conv.lastSeen[session] = new Date().toISOString();
+      DB.saveConversations(convs);
+
+      chatName.textContent = user.name;
+      chatSub.textContent = user.email;
+      chatAvatar.src = user.avatar || 'avatar-default.png';
+
+      chatMessages.innerHTML = '';
+      conv.messages.forEach((m, idx) => {
+        const div = document.createElement('div');
+        div.className = 'msg-row ' + (m.from === session ? 'msg-me' : 'msg-other');
+        let inner = `<div>${m.text ? escapeHtml(m.text) : ''}</div>`;
+        if (m.image) inner += `<img src="${m.image}" class="msg-image" alt="imagem">`;
+        inner += `<div class="msg-meta">${m.from === session ? 'Você' : escapeHtml(users.find(u=>u.email===m.from)?.name||m.from)} • ${new Date(m.time).toLocaleString()}</div>`;
+        div.innerHTML = inner;
+        chatMessages.appendChild(div);
+      });
+
+      // indicador de visto: mostrar avatar pequeno ao lado da última mensagem enviada por você se o outro já viu
+      const lastSentIndex = conv.messages.map(m=>m.from).lastIndexOf(session);
+      if (lastSentIndex >= 0) {
+        const lastSent = conv.messages[lastSentIndex];
+        const otherSeenISO = conv.lastSeen && conv.lastSeen[conv.members.find(m=>m!==session)];
+        if (otherSeenISO && new Date(otherSeenISO).getTime() >= new Date(lastSent.time).getTime()) {
+          const seenWrap = document.createElement('div');
+          seenWrap.className = 'seen-indicator';
+          const otherUser = DB.getUsers().find(u => (u.email||'').toLowerCase() === (conv.members.find(m=>m!==session)||'').toLowerCase()) || { avatar:'avatar-default.png', name:conv.members.find(m=>m!==session) };
+          seenWrap.innerHTML = `<img class="seen-avatar" src="${otherUser.avatar||'avatar-default.png'}" alt="visto"> <span>Visto</span>`;
+          chatMessages.appendChild(seenWrap);
+        }
+      }
+
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+      chatInputWrap.style.display = 'flex';
+      currentConvId = convId;
+      updateBadges();
+    }
+
+    function readFileAsDataURL(file) {
+      return new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result);
+        reader.onerror = rej;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function sendMessage() {
+      if (!currentConvId) return;
+      const text = (msgText.value || '').trim();
+      const file = msgFile.files && msgFile.files[0];
+      if (!text && !file) return;
+      const convs = DB.getConversations() || [];
+      const conv = convs.find(c => c.id === currentConvId);
+      if (!conv) return;
+      if (!conv.members.includes(session)) { alert('Sem permissão para enviar nesta conversa.'); return; }
+
+      let imageData = null;
+      if (file) {
+        try { imageData = await readFileAsDataURL(file); } catch(e){ console.error(e); alert('Erro ao ler imagem'); return; }
+      }
+
+      const to = conv.members.find(m => m !== session);
+      const msg = { id: 'm'+Date.now(), from: session, to, text: text || '', image: imageData || null, time: new Date().toISOString(), read: false };
+      conv.messages = conv.messages || [];
+      conv.messages.push(msg);
+
+      // se o outro já tinha lastSeen posterior, marcar como lida imediatamente
+      conv.lastSeen = conv.lastSeen || {};
+      const otherLastSeen = conv.lastSeen[to];
+      if (otherLastSeen && new Date(otherLastSeen).getTime() >= new Date(msg.time).getTime()) {
+        msg.read = true;
+      }
+
+      DB.saveConversations(convs);
+      msgText.value = '';
+      msgFile.value = '';
+      openConversation(currentConvId);
+      loadConversations();
+    }
+
+    sendMsgBtn.addEventListener('click', sendMessage);
+    msgText.addEventListener('keydown', (e)=> { if (e.key === 'Enter') sendMessage(); });
+
+    backToList.addEventListener('click', ()=> {
+      currentConvId = null;
+      chatMessages.innerHTML = '<div class="muted">Selecione uma conversa à esquerda para ver mensagens.</div>';
+      chatName.textContent = 'Selecione uma conversa';
+      chatSub.textContent = 'Última mensagem';
+      chatAvatar.src = 'avatar-default.png';
+      chatInputWrap.style.display = 'none';
+      document.querySelector('.conversations-list').scrollIntoView({behavior:'smooth'});
+    });
+
+    newConvBtn.addEventListener('click', ()=> {
+      modalBackdrop.style.display = 'flex';
+      modalSearch.value = '';
+      modalResults.innerHTML = '<div class="muted">Pesquise por nome ou email</div>';
+      modalSearch.focus();
+    });
+    closeModal.addEventListener('click', ()=> modalBackdrop.style.display = 'none');
+    modalBackdrop.addEventListener('click', (e)=> { if (e.target === modalBackdrop) modalBackdrop.style.display = 'none'; });
+
+    modalSearch.addEventListener('input', ()=> {
+      const q = (modalSearch.value || '').trim().toLowerCase();
+      const users = DB.getUsers().filter(u => (u.email||'').toLowerCase() !== session);
+      if (!q) { modalResults.innerHTML = '<div class="muted">Digite nome ou email para pesquisar</div>'; return; }
+      const results = users.filter(u => (u.name||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q));
+      if (!results.length) { modalResults.innerHTML = '<div class="muted">Nenhum utilizador encontrado</div>'; return; }
+      modalResults.innerHTML = '';
+      results.forEach(u => {
+        const row = document.createElement('div');
+        row.className = 'user-row';
+        row.style.display = 'flex';
+        row.style.justifyContent = 'space-between';
+        row.style.alignItems = 'center';
+        row.style.padding = '8px';
+        row.innerHTML = `<div style="display:flex;align-items:center;gap:10px"><img src="${u.avatar||'avatar-default.png'}" style="width:44px;height:44px;border-radius:8px;object-fit:cover"><div><strong>${escapeHtml(u.name)}</strong><div class="muted" style="font-size:13px">${escapeHtml(u.email)}</div></div></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn small" data-email="${escapeHtml(u.email)}" data-action="chat">Conversar</button>
+            <button class="btn small primary" data-email="${escapeHtml(u.email)}" data-action="request">Fazer pedido</button>
+          </div>`;
+        modalResults.appendChild(row);
+      });
+      modalResults.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', ()=> {
+          const email = btn.getAttribute('data-email');
+          const action = btn.getAttribute('data-action');
+          if (action === 'chat') {
+            const conv = Friendship.startConversationWith(email);
+            modalBackdrop.style.display = 'none';
+            loadConversations();
+            openConversation(conv.id);
+          } else if (action === 'request') {
+            Friendship.sendRequestTo(email);
+            alert('Pedido de amizade enviado');
+          }
+        });
+      });
+    });
+
+    function updateBadges(){
+      const reqs = DB.getFriendRequests().filter(r => r.to === session && r.status === 'pending').length;
+      const convs = DB.getConversations() || [];
+      const unreadTotal = convs.reduce((acc,c) => acc + (Array.isArray(c.messages) ? c.messages.filter(m => m.to === session && !m.read).length : 0), 0);
+      const bReq = document.getElementById('badge-requests');
+      const bMsg = document.getElementById('badge-messages');
+      if (bReq) { bReq.textContent = reqs || ''; bReq.style.display = reqs ? 'inline-flex' : 'none'; }
+      if (bMsg) { bMsg.textContent = unreadTotal ? unreadTotal : ''; bMsg.style.display = unreadTotal ? 'inline-flex' : 'none'; }
+    }
+
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-target');
+        if (!target) return;
+        window.location.href = target;
+      });
+    });
+
+    const params = new URLSearchParams(location.search);
+    const convId = params.get('conv');
+    loadConversations();
+    if (convId) openConversation(convId);
+    setInterval(()=> { loadConversations(); updateBadges(); }, 1500);
+
+  })();
+  </script>
+</body>
+</html>

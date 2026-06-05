@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Book-face — Login</title>
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="layout.css" />
+  <link rel="stylesheet" href="components.css" />
+</head>
+<body>
+  <div class="bg-graphic" aria-hidden="true">
+    <svg viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+      <defs>
+        <linearGradient id="g1" x1="0" x2="1">
+          <stop offset="0" stop-color="#0ea5a4"/>
+          <stop offset="1" stop-color="#0b74d1"/>
+        </linearGradient>
+      </defs>
+      <rect width="1200" height="800" fill="url(#g1)"/>
+      <g opacity="0.12" fill="#fff">
+        <polygon points="50,20 220,80 120,200 10,140"></polygon>
+        <polygon points="300,40 520,10 600,140 420,180"></polygon>
+        <polygon points="900,60 1100,40 1150,180 980,200"></polygon>
+        <polygon points="700,300 920,260 980,380 760,420"></polygon>
+        <polygon points="120,420 260,360 320,480 160,520"></polygon>
+      </g>
+      <g stroke="#ffffff" stroke-opacity="0.08" stroke-width="1" fill="none">
+        <path d="M40 100 L200 60 L360 120 L520 80"></path>
+        <path d="M800 40 L940 120 L1080 80"></path>
+      </g>
+    </svg>
+  </div>
+
+  <main class="centered-page">
+    <section class="login-card" role="region" aria-label="Customer login">
+      <div class="card-header">
+        <img src="logo.png" alt="Book-face logo" class="logo-img">
+        <div class="subtitle">CUSTOMER LOGIN</div>
+      </div>
+
+      <form id="loginForm" class="form" autocomplete="on" novalidate>
+        <label class="label" for="loginEmail">Email ID</label>
+        <input id="loginEmail" name="email" type="email" placeholder="seu@email.com" required>
+
+        <label class="label" for="loginPassword">Password</label>
+        <input id="loginPassword" name="password" type="password" placeholder="Senha" required>
+
+        <div class="row between">
+          <label class="checkbox">
+            <input id="remember" type="checkbox">
+            <span>Remember me</span>
+          </label>
+          <a class="link muted" href="forgot.html">Forgot Password?</a>
+        </div>
+
+        <div class="form-row">
+          <button type="submit" class="btn primary large">LOGIN</button>
+        </div>
+
+        <div id="loginMsg" class="msg" role="status" aria-live="polite"></div>
+
+        <div class="footer-links">
+          <span>Não tem conta?</span>
+          <a href="signup.html">Criar conta</a>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="storage.js"></script>
+  <script src="utils.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>

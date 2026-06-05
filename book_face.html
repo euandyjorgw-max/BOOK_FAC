@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Book‑face — Entrar</title>
+  <style>
+    :root{
+      --bg1: linear-gradient(180deg,#e6f0ff,#f7fbff);
+      --card:#ffffff;
+      --accent:#1877f2; /* azul vivo tipo FB */
+      --accent-2:#ff6b6b; /* contraste */
+      --muted:#6b7280;
+      --shadow: 0 18px 50px rgba(11,92,173,0.12);
+    }
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Arial,Helvetica,sans-serif;background:var(--bg1);color:#071133}
+    .center-wrap{height:100%;display:flex;align-items:center;justify-content:center;padding:24px}
+    .card{
+      width:100%;max-width:920px;background:var(--card);border-radius:16px;padding:28px;box-shadow:var(--shadow);
+      display:flex;gap:28px;align-items:center;justify-content:space-between;
+      transform-origin:center;overflow:hidden;
+    }
+    .brand{
+      display:flex;align-items:center;gap:18px;
+    }
+    .logo-circle{
+      width:120px;height:120px;border-radius:20px;display:flex;align-items:center;justify-content:center;
+      background:linear-gradient(135deg,var(--accent),#4aa3ff);color:#fff;font-weight:900;font-size:64px;box-shadow:0 10px 30px rgba(11,92,173,0.18);
+      border:6px solid rgba(255,255,255,0.12);
+    }
+    .brand-text{display:flex;flex-direction:column}
+    .brand-title{font-size:28px;font-weight:800;color:#07204a}
+    .brand-sub{font-size:14px;color:var(--muted);margin-top:6px}
+    .meta-badge{
+      display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;background:#f3f6ff;border:1px solid #e6eef6;
+      font-weight:700;color:#0b3f6b;
+    }
+    .meta-badge .pt{background:#ffd54f;color:#07204a;padding:6px 8px;border-radius:6px;font-weight:800}
+    .progress-area{flex:1;margin-left:12px}
+    .progress-bar{
+      height:12px;background:#eef6ff;border-radius:999px;overflow:hidden;border:1px solid #e6eef6;
+      box-shadow:inset 0 2px 6px rgba(11,92,173,0.03);
+    }
+    .progress-fill{
+      height:100%;width:0;background:linear-gradient(90deg,var(--accent),#4aa3ff);border-radius:999px;transition:width 0.2s linear;
+    }
+    .status-lines{margin-top:12px;display:flex;flex-direction:column;gap:6px}
+    .status-lines .line{font-size:13px;color:var(--muted)}
+    .spinner{
+      width:56px;height:56px;border-radius:50%;border:6px solid rgba(11,92,173,0.08);border-top-color:var(--accent);animation:spin 1s linear infinite;
+      display:inline-block;margin-left:12px;
+    }
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .footer-note{font-size:12px;color:var(--muted);margin-top:10px}
+    /* fade out animation before redirect */
+    .fade-out{animation:fadeOut 0.6s ease forwards}
+    @keyframes fadeOut{to{opacity:0;transform:scale(0.98)}}
+
+    /* responsive */
+    @media (max-width:820px){
+      .card{flex-direction:column;align-items:center;text-align:center;padding:20px}
+      .brand{flex-direction:row;gap:12px}
+      .progress-area{width:100%;margin-left:0}
+      .logo-circle{width:96px;height:96px;font-size:48px}
+    }
+  </style>
+</head>
+<body>
+  <div class="center-wrap">
+    <div class="card" id="splashCard" role="dialog" aria-live="polite" aria-label="Tela de entrada Book-face">
+      <div class="brand" aria-hidden="false">
+        <div class="logo-circle" aria-hidden="true">B</div>
+        <div class="brand-text">
+          <div class="brand-title">Book‑face</div>
+          <div class="brand-sub">A rede social em Português</div>
+          <div style="margin-top:10px">
+            <span class="meta-badge" title="Plataforma">
+              <span class="pt">PT</span>
+              <span style="font-size:13px;color:#0b3f6b">Book‑face</span>
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="progress-area" style="min-width:320px">
+        <div style="display:flex;align-items:center;justify-content:space-between">
+          <div style="display:flex;align-items:center;gap:12px">
+            <div style="font-weight:700;color:#07204a">@ iniciando o Book‑face</div>
+            <div class="spinner" aria-hidden="true"></div>
+          </div>
+          <div style="text-align:right;color:var(--muted);font-size:13px">Carregando…</div>
+        </div>
+
+        <div class="progress-bar" aria-hidden="false" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" role="progressbar" style="margin-top:14px">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+
+        <div class="status-lines" id="statusLines" aria-live="polite">
+          <div class="line">Inicializando componentes</div>
+          <div class="line">Carregando preferências</div>
+          <div class="line">Preparando interface</div>
+        </div>
+
+        <div class="footer-note">Aguarde 10 segundos enquanto preparamos a sua experiência.</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function(){
+      const totalMs = 12000; // 12 segundos
+      const start = Date.now();
+      const fill = document.getElementById('progressFill');
+      const statusLines = document.getElementById('statusLines');
+      const splashCard = document.getElementById('splashCard');
+
+      // mensagens sequenciais para dar sensação de processamento
+      const messages = [
+        'Inicializando componentes',
+        'Carregando preferências',
+        'Sincronizando dados locais',
+        'Preparando interface',
+        'Quase pronto'
+      ];
+
+      // animate progress smoothly
+      function tick(){
+        const elapsed = Date.now() - start;
+        const pct = Math.min(100, Math.round((elapsed / totalMs) * 100));
+        fill.style.width = pct + '%';
+        fill.parentElement.setAttribute('aria-valuenow', pct);
+
+        // update status line based on progress
+        const idx = Math.min(messages.length - 1, Math.floor((pct / 100) * messages.length));
+        statusLines.innerHTML = '';
+        for (let i = 0; i < messages.length; i++){
+          const div = document.createElement('div');
+          div.className = 'line';
+          div.textContent = i <= idx ? messages[i] : 'Aguardando…';
+          statusLines.appendChild(div);
+        }
+
+        if (elapsed < totalMs) {
+          requestAnimationFrame(tick);
+        } else {
+          // finish: small fade then redirect
+          splashCard.classList.add('fade-out');
+          setTimeout(() => {
+            // go to login page
+            window.location.href = 'index.html';
+          }, 600);
+        }
+      }
+
+      // start animation
+      requestAnimationFrame(tick);
+    })();
+  </script>
+</body>
+</html>

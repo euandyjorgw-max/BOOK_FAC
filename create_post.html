@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Criar Publicação — Book-face</title>
+  <style>
+    :root{--accent:#6b8cff;--muted:#6b7280}
+    body{font-family:Inter,system-ui,Arial,Helvetica,sans-serif;background:#f6fbff;margin:0;color:#071133}
+    .wrap{max-width:820px;margin:20px auto;padding:18px}
+    textarea{width:100%;min-height:140px;padding:12px;border-radius:8px;border:1px solid #e6eef6}
+    .row{display:flex;gap:12px;align-items:center;margin-top:12px}
+    .btn{padding:10px 14px;border-radius:8px;border:none;cursor:pointer}
+    .primary{background:var(--accent);color:#fff}
+    .ghost{background:transparent;border:1px solid #e6eef6}
+    .preview{margin-top:12px;padding:8px;border-radius:8px;border:1px solid #eef6ff;display:none}
+    .muted{color:var(--muted)}
+    .image-thumb{max-width:100%;border-radius:8px}
+    .debug{font-family:monospace;color:#0b3f6b;margin-top:8px}
+  </style>
+</head>
+<body>
+  <script src="storage.js"></script>
+
+  <div class="wrap">
+    <h2>Nova publicação</h2>
+    <textarea id="postText" placeholder="No que estás a pensar?"></textarea>
+
+    <div class="row">
+      <label class="muted">Privacidade:
+        <select id="privacySelect" style="margin-left:8px;padding:6px;border-radius:6px">
+          <option value="public">Público</option>
+          <option value="friends">Amigos</option>
+          <option value="onlyme">Só eu</option>
+        </select>
+      </label>
+
+      <div style="margin-left:auto;display:flex;gap:8px;align-items:center">
+        <label for="fileInput" class="btn ghost" id="attachBtn">📷 Adicionar foto</label>
+        <input id="fileInput" type="file" accept="image/*" style="display:none">
+        <button id="publishBtn" class="btn primary">Publicar</button>
+      </div>
+    </div>
+
+    <div id="previewArea" class="preview">
+      <div class="muted">Pré-visualização</div>
+      <div id="imagePreviewWrapper"></div>
+      <button id="removeImage" class="btn ghost" style="margin-top:8px">Remover imagem</button>
+    </div>
+
+    <div id="msg" class="muted" style="margin-top:12px"></div>
+    <div id="debug" class="debug"></div>
+  </div>
+
+  <script>
+  (function(){
+    function dbg(t){ const el=document.getElementById('debug'); el.textContent += t + '\n'; console.log(t); }
+    function show(m,c){ const el=document.getElementById('msg'); el.style.color = c||'#b91c1c'; el.textContent = m; dbg('MSG: '+m); }
+
+    if (typeof DB === 'undefined') { alert('Erro: DB não carregado.'); dbg('DB undefined'); return; }
+
+    const session = DB.getSession();
+    dbg('Session: ' + session);
+    if (!session) { show('Sessão não encontrada. Define sessão no Console: DB.setSession("ana@example.com")', '#b91c1c'); return; }
+
+    const fileInput = document.getElementById('fileInput');
+    const attachBtn = document.getElementById('attachBtn');
+    const previewArea = document.getElementById('previewArea');
+    const imagePreviewWrapper = document.getElementById('imagePreviewWrapper');
+    const removeImageBtn = document.getElementById('removeImage');
+    const publishBtn = document.getElementById('publishBtn');
+    const postText = document.getElementById('postText');
+    const privacySelect = document.getElementById('privacySelect');
+
+    let selectedImageData = null;
+
+    attachBtn.addEventListener('click', ()=> fileInput.click());
+    fileInput.addEventListener('change', (e)=>{
+      const f = e.target.files[0];
+      if (!f) { dbg('Nenhum ficheiro seleccionado'); return; }
+      if (!f.type.startsWith('image/')) { show('Ficheiro não é imagem'); dbg('Tipo inválido: '+f.type); return; }
+      const reader = new FileReader();
+      reader.onload = function(ev){
+        selectedImageData = ev.target.result;
+        imagePreviewWrapper.innerHTML = '<img src="'+selectedImageData+'" class="image-thumb" alt="preview">';
+        previewArea.style.display = 'block';
+        dbg('Imagem carregada, tamanho base64: '+selectedImageData.length);
+      };
+      reader.onerror = function(err){ dbg('FileReader error: '+err); show('Erro a ler imagem'); };
+      reader.readAsDataURL(f);
+    });
+
+    removeImageBtn.addEventListener('click', ()=> {
+      selectedImageData = null;
+      fileInput.value = '';
+      imagePreviewWrapper.innerHTML = '';
+      previewArea.style.display = 'none';
+      dbg('Imagem removida');
+    });
+
+    publishBtn.addEventListener('click', ()=>{
+      show('A processar publicação...', '#0f5132');
+      dbg('Publish clicked');
+
+      try {
+        const text = (postText.value || '').trim();
+        const privacy = privacySelect.value || 'public';
+        if (!text && !selectedImageData) { show('Escreve algo ou adiciona uma imagem antes de publicar.'); dbg('Validação falhou'); return; }
+
+        const users = DB.getUsers() || [];
+        const me = users.find(u => (u.email||'').toLowerCase() === session.toLowerCase());
+        if (!me) { show('Utilizador da sessão não encontrado. Faz login novamente.'); dbg('me not found'); return; }
+
+        const posts = DB.getPosts() || [];
+        const newPost = {
+          id: 'p' + Date.now() + Math.floor(Math.random()*999),
+          authorEmail: me.email,
+          name: me.name || me.email,
+          avatar: me.avatar || 'avatar-default.png',
+          text: text,
+          image: selectedImageData || null,
+          video: null,
+          time: new Date().toISOString(),
+          reactions: {},
+          userReactions: {},
+          comments: [],
+          privacy: privacy
+        };
+
+        posts.unshift(newPost);
+        DB.savePosts(posts);
+        dbg('Post salvo: '+newPost.id);
+
+        try { localStorage.setItem('bf_last_post', newPost.id); } catch(e){ dbg('Não foi possível gravar bf_last_post: '+e); }
+
+        show('Publicação criada. A redirecionar...', '#0f5132');
+        setTimeout(()=> location.replace('feed.html'), 500);
+
+      } catch (err) {
+        dbg('Publish exception: '+(err && err.message));
+        show('Erro ao criar publicação. Vê o console para detalhes.');
+      }
+    });
+
+    dbg('create_post initialized. Users: '+(DB.getUsers()||[]).length+' Posts: '+(DB.getPosts()||[]).length);
+  })();
+  </script>
+</body>
+</html>

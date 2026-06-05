@@ -1,0 +1,356 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Book-face — Pessoas e Pedidos</title>
+
+  <!-- estilos principais -->
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="layout.css" />
+  <link rel="stylesheet" href="components.css" />
+
+  <style>
+    /* Painel e lista */
+    .panel { max-width:980px; margin:0 auto; padding:12px; }
+    #usersWrap{max-height:52vh;overflow:auto;padding:6px;display:flex;flex-direction:column;gap:10px}
+    .user-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px;border-radius:10px;border:1px solid #eef3fb;background:#fff;box-shadow:0 4px 10px rgba(15,23,42,0.04)}
+    .user-info{display:flex;align-items:center;gap:12px;min-width:0}
+    .user-info img{width:56px;height:56px;border-radius:10px;object-fit:cover;flex:0 0 56px}
+    .user-meta{min-width:0;overflow:hidden}
+    .user-meta strong{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .user-meta .muted{font-size:13px;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .user-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end;min-width:220px;max-width:420px}
+    .user-actions .btn{white-space:nowrap}
+    .status-pill{font-size:12px;padding:6px 8px;border-radius:999px;background:#f3f4f6;color:#374151}
+
+    /* Top navigation estilo Facebook-like */
+    .nav-topbar{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--card);box-shadow:var(--shadow);position:sticky;top:0;z-index:50}
+    .nav-left{display:flex;align-items:center;gap:12px}
+    .nav-center{display:flex;gap:6px;align-items:center;flex:1;justify-content:center}
+    .nav-btn{background:transparent;border:none;padding:8px 12px;border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;color:#0b3f6b;font-weight:600}
+    .nav-btn:hover{background:rgba(11,116,209,0.06)}
+    .nav-btn.active{background:rgba(11,116,209,0.12);color:var(--primary)}
+    .nav-icon{font-size:18px;line-height:1}
+    .nav-label{font-size:12px}
+    .nav-badge{min-width:20px;height:20px;background:#e11d48;color:#fff;border-radius:999px;display:inline-flex;align-items:center;justify-content:center;padding:0 6px;font-size:12px;margin-left:6px}
+    .profile-btn{display:flex;align-items:center;gap:8px}
+    .nav-avatar{width:32px;height:32px;border-radius:8px;object-fit:cover}
+    .nav-right{display:flex;align-items:center;gap:8px}
+    .top-search{padding:8px 10px;border-radius:999px;border:1px solid #e6eef6;min-width:160px}
+
+    /* mobile: compactar ícones e esconder labels */
+    @media (max-width:640px){
+      .user-row{flex-direction:column;align-items:stretch}
+      .user-actions{justify-content:space-between;gap:8px;margin-top:8px}
+      .user-actions .btn{flex:1}
+      .nav-center{gap:4px}
+      .nav-btn{padding:8px 8px}
+      .nav-label{display:none}
+      .top-search{display:none}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Barra de navegação superior -->
+  <header class="topbar nav-topbar">
+    <div class="nav-left">
+      <img src="logo.png" alt="Book-face" class="logo-small">
+    </div>
+
+    <nav class="nav-center" role="navigation" aria-label="Navegação principal">
+      <button class="nav-btn" data-target="feed.html" id="nav-home"><span class="nav-icon">🏠</span><span class="nav-label">Início</span></button>
+      <button class="nav-btn" data-target="friend_requests.html" id="nav-requests"><span class="nav-icon">👥</span><span class="nav-label">Pedidos</span><span class="nav-badge" id="badge-requests"></span></button>
+      <button class="nav-btn active" data-target="messages.html" id="nav-messages"><span class="nav-icon">💬</span><span class="nav-label">Mensagens</span><span class="nav-badge" id="badge-messages"></span></button>
+      <button class="nav-btn" data-target="notifications.html" id="nav-notifs"><span class="nav-icon">🔔</span><span class="nav-label">Notificações</span><span class="nav-badge" id="badge-notifs"></span></button>
+      <button class="nav-btn profile-btn" data-target="profile.html" id="nav-profile"><img src="avatar-default.png" alt="Perfil" class="nav-avatar"><span class="nav-label">Perfil</span></button>
+    </nav>
+
+      
+
+    <div class="nav-right">
+      <input id="topSearch" class="top-search" placeholder="Pesquisar no Book-face">
+    </div>
+  </header>
+
+  <!-- Conteúdo principal -->
+  <main class="panel">
+    <section class="card" style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+        <h3 style="margin:0">Encontrar pessoas</h3>
+        <input id="searchUsers" placeholder="Pesquisar por nome ou email" style="padding:8px;border-radius:8px;border:1px solid #e6eef6;min-width:180px">
+      </div>
+
+      <div id="usersWrap" aria-live="polite"></div>
+    </section>
+
+    <section class="card" style="margin-top:12px">
+      <h4 style="margin-top:0">Usuários do Book-face</h4>
+      <div id="allUsersWrap" style="max-height:18vh;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:8px"></div>
+    </section>
+
+    <section class="card" style="margin-top:12px">
+      <h4 style="margin-top:0">Pedidos recebidos</h4>
+      <div id="incomingWrap" style="max-height:18vh;overflow:auto;padding:8px;display:flex;flex-direction:column;gap:8px"></div>
+    </section>
+  </main>
+
+  <!-- scripts essenciais -->
+  <script src="storage.js"></script>
+  <script src="utils.js"></script>
+  <script src="friends.js"></script>
+
+  <script>
+  // helper escapeHtml
+  function escapeHtml(str){
+    return String(str || '').replace(/[&<>"']/g, function(m){ return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[m]; });
+  }
+
+  (function(){
+    const session = DB.getSession();
+    if (!session) { window.location.href = 'index.html'; return; }
+
+    const usersWrap = document.getElementById('usersWrap');
+    const allUsersWrap = document.getElementById('allUsersWrap');
+    const incomingWrap = document.getElementById('incomingWrap');
+    const searchInput = document.getElementById('searchUsers');
+
+    // Render lista completa de usuários
+    function renderAllUsersList() {
+      allUsersWrap.innerHTML = '';
+      const users = DB.getUsers().filter(u => (u.email||'').toLowerCase() !== session);
+      if (!users.length) { allUsersWrap.innerHTML = '<div class="muted">Nenhum usuário cadastrado.</div>'; return; }
+      users.forEach(u => {
+        const div = document.createElement('div');
+        div.className = 'user-row';
+        div.innerHTML = `<div class="user-info"><img src="${u.avatar||'avatar-default.png'}" alt=""><div class="user-meta"><strong>${escapeHtml(u.name)}</strong><div class="muted">${escapeHtml(u.email)}</div></div></div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <button class="btn small" data-email="${escapeHtml(u.email)}" data-action="chat">Conversar</button>
+            <button class="btn small danger" data-email="${escapeHtml(u.email)}" data-action="remove">Eliminar</button>
+          </div>`;
+        allUsersWrap.appendChild(div);
+      });
+      // delegação de eventos
+      allUsersWrap.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const email = btn.getAttribute('data-email');
+          const action = btn.getAttribute('data-action');
+          if (action === 'chat') {
+            const conv = Friendship.startConversationWith(email);
+            window.location.href = `messages.html?conv=${conv.id}`;
+          } else if (action === 'remove') {
+            if (!confirm('Remover amizade com este usuário (se existir)?')) return;
+            Friendship.removeFriend(email);
+            renderSearchResults(searchInput.value);
+            renderIncoming();
+            renderAllUsersList();
+          }
+        });
+      });
+    }
+
+    // Render resultados da pesquisa
+    function renderSearchResults(filter='') {
+      usersWrap.innerHTML = '';
+      const q = (filter || '').trim().toLowerCase();
+      const users = DB.getUsers().filter(u => (u.email||'').toLowerCase() !== session);
+      const friendReqs = DB.getFriendRequests();
+      const friends = DB.getFriends();
+
+      const filtered = users.filter(u => {
+        if (!q) return true;
+        const name = (u.name || '').toLowerCase();
+        const email = (u.email || '').toLowerCase();
+        return name.includes(q) || email.includes(q);
+      });
+
+      if (!filtered.length) {
+        usersWrap.innerHTML = '<div class="muted">Nenhum utilizador encontrado.</div>';
+        return;
+      }
+
+      filtered.forEach(u => {
+        const row = document.createElement('div');
+        row.className = 'user-row';
+
+        const info = document.createElement('div');
+        info.className = 'user-info';
+        info.innerHTML = `<img src="${u.avatar||'avatar-default.png'}" alt=""><div class="user-meta"><strong>${escapeHtml(u.name)}</strong><div class="muted">${escapeHtml(u.email)}</div></div>`;
+
+        const actions = document.createElement('div');
+        actions.className = 'user-actions';
+
+        const isFriend = friends.some(f => (f.a === session && f.b === u.email) || (f.b === session && f.a === u.email));
+        const pendingSent = friendReqs.some(r => r.from === session && r.to === u.email && r.status === 'pending');
+        const pendingRecv = friendReqs.some(r => r.from === u.email && r.to === session && r.status === 'pending');
+
+        // Conversar sempre disponível
+        const chatBtn = document.createElement('button');
+        chatBtn.className = 'btn small';
+        chatBtn.textContent = 'Conversar';
+        chatBtn.addEventListener('click', ()=> {
+          const conv = Friendship.startConversationWith(u.email);
+          window.location.href = `messages.html?conv=${conv.id}`;
+        });
+        actions.appendChild(chatBtn);
+
+        if (isFriend) {
+          const removeBtn = document.createElement('button');
+          removeBtn.className = 'btn small danger';
+          removeBtn.textContent = 'Eliminar';
+          removeBtn.addEventListener('click', ()=> {
+            if (!confirm('Remover este amigo?')) return;
+            Friendship.removeFriend(u.email);
+            renderSearchResults(searchInput.value);
+            renderIncoming();
+            renderAllUsersList();
+          });
+          actions.appendChild(removeBtn);
+          const pill = document.createElement('div'); pill.className='status-pill'; pill.textContent='Amigo';
+          actions.appendChild(pill);
+        } else if (pendingSent) {
+          const cancelBtn = document.createElement('button');
+          cancelBtn.className = 'btn small';
+          cancelBtn.textContent = 'Cancelar pedido';
+          cancelBtn.addEventListener('click', ()=> {
+            Friendship.cancelRequestTo(u.email);
+            renderSearchResults(searchInput.value);
+            renderIncoming();
+          });
+          actions.appendChild(cancelBtn);
+          const pill = document.createElement('div'); pill.className='status-pill'; pill.textContent='Pedido enviado';
+          actions.appendChild(pill);
+        } else if (pendingRecv) {
+          const acceptBtn = document.createElement('button');
+          acceptBtn.className = 'btn small primary';
+          acceptBtn.textContent = 'Aceitar';
+          acceptBtn.addEventListener('click', ()=> {
+            Friendship.acceptRequestFrom(u.email);
+            renderSearchResults(searchInput.value);
+            renderIncoming();
+            renderAllUsersList();
+          });
+          const declineBtn = document.createElement('button');
+          declineBtn.className = 'btn small';
+          declineBtn.textContent = 'Recusar';
+          declineBtn.addEventListener('click', ()=> {
+            Friendship.declineRequestFrom(u.email);
+            renderSearchResults(searchInput.value);
+            renderIncoming();
+          });
+          actions.appendChild(acceptBtn);
+          actions.appendChild(declineBtn);
+          const pill = document.createElement('div'); pill.className='status-pill'; pill.textContent='Pendente';
+          actions.appendChild(pill);
+        } else {
+          const addBtn = document.createElement('button');
+          addBtn.className = 'btn small primary';
+          addBtn.textContent = 'Fazer pedido';
+          addBtn.addEventListener('click', ()=> {
+            Friendship.sendRequestTo(u.email);
+            renderSearchResults(searchInput.value);
+            renderIncoming();
+          });
+          actions.appendChild(addBtn);
+        }
+
+        row.appendChild(info);
+        row.appendChild(actions);
+        usersWrap.appendChild(row);
+      });
+    }
+
+    // Render pedidos recebidos
+    function renderIncoming() {
+      incomingWrap.innerHTML = '';
+      const reqs = DB.getFriendRequests().filter(r => r.to === session && r.status === 'pending');
+      const users = DB.getUsers();
+      if (!reqs.length) { incomingWrap.innerHTML = '<div class="muted">Sem pedidos recebidos.</div>'; return; }
+      reqs.forEach(r => {
+        const fromUser = users.find(u => u.email === r.from) || { name: r.from, email: r.from, avatar:'avatar-default.png' };
+        const div = document.createElement('div');
+        div.className = 'user-row';
+        div.innerHTML = `<div class="user-info"><img src="${fromUser.avatar}" alt=""><div class="user-meta"><strong>${escapeHtml(fromUser.name)}</strong><div class="muted">${escapeHtml(fromUser.email)}</div></div></div>`;
+        const actions = document.createElement('div'); actions.className='user-actions';
+        const accept = document.createElement('button'); accept.className='btn small primary'; accept.textContent='Aceitar';
+        const decline = document.createElement('button'); decline.className='btn small'; decline.textContent='Recusar';
+        const chat = document.createElement('button'); chat.className='btn small'; chat.textContent='Conversar';
+        accept.addEventListener('click', ()=> { Friendship.acceptRequestFrom(r.from); renderSearchResults(searchInput.value); renderIncoming(); renderAllUsersList(); });
+        decline.addEventListener('click', ()=> { Friendship.declineRequestFrom(r.from); renderSearchResults(searchInput.value); renderIncoming(); });
+        chat.addEventListener('click', ()=> {
+          const conv = Friendship.startConversationWith(r.from);
+          window.location.href = `messages.html?conv=${conv.id}`;
+        });
+        actions.appendChild(accept); actions.appendChild(decline); actions.appendChild(chat);
+        div.appendChild(actions);
+        incomingWrap.appendChild(div);
+      });
+    }
+
+    // Eventos de pesquisa
+    searchInput.addEventListener('input', ()=> renderSearchResults(searchInput.value));
+
+    // Inicializar listas
+    renderSearchResults();
+    renderAllUsersList();
+    renderIncoming();
+
+    // Top navigation behavior
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const target = btn.getAttribute('data-target');
+        if (!target) return;
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        window.location.href = target;
+      });
+    });
+
+    // Preencher pesquisa se houver query param q
+    const params = new URLSearchParams(location.search);
+    const q = params.get('q') || '';
+    if (q) {
+      searchInput.value = q;
+      searchInput.dispatchEvent(new Event('input'));
+    }
+
+    // Badges e destaque do botão ativo
+    function updateBadges(){
+      const reqs = DB.getFriendRequests().filter(r => r.to === session && r.status === 'pending').length;
+      const convs = DB.getConversations();
+      const convCount = convs.filter(c => c.members.includes(session)).length;
+      const bReq = document.getElementById('badge-requests');
+      const bMsg = document.getElementById('badge-messages');
+      const bNot = document.getElementById('badge-notifs');
+      if (bReq) { bReq.textContent = reqs || ''; bReq.style.display = reqs ? 'inline-flex' : 'none'; }
+      if (bMsg) { bMsg.textContent = convCount > 0 ? convCount : ''; bMsg.style.display = convCount ? 'inline-flex' : 'none'; }
+      if (bNot) { bNot.textContent = ''; bNot.style.display = 'none'; }
+    }
+
+    function highlightActive(){
+      const path = location.pathname.split('/').pop() || 'friend_requests.html';
+      const map = {
+        'index.html':'nav-home',
+        'feed.html':'nav-home',
+        'friend_requests.html':'nav-requests',
+        'messages.html':'nav-messages',
+        'notifications.html':'nav-notifs',
+        'profile.html':'nav-profile'
+      };
+      const id = map[path];
+      if (id) {
+        document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        const el = document.getElementById(id);
+        if (el) el.classList.add('active');
+      }
+    }
+
+    updateBadges();
+    highlightActive();
+    setInterval(updateBadges, 2000);
+
+  })();
+  </script>
+</body>
+</html>

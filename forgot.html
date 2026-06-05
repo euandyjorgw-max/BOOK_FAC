@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Book-face — Recuperar senha</title>
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="layout.css" />
+  <link rel="stylesheet" href="components.css" />
+</head>
+<body>
+  <div class="bg-graphic" aria-hidden="true"></div>
+
+  <main class="centered-page">
+    <section class="login-card" role="region" aria-label="Recuperar senha">
+      <div class="card-header">
+        <img src="logo.png" alt="Book-face logo" class="logo-img">
+        <div class="subtitle">RECUPERAR SENHA</div>
+      </div>
+
+      <form id="forgotForm" class="form" novalidate>
+        <label class="label" for="forgotName">Nome completo</label>
+        <input id="forgotName" type="text" placeholder="Seu nome" required>
+
+        <label class="label" for="forgotCode">Código de segurança (4 dígitos)</label>
+        <input id="forgotCode" type="text" maxlength="4" placeholder="1234" required>
+
+        <div class="form-row">
+          <button type="submit" class="btn primary large">Recuperar</button>
+        </div>
+
+        <div id="forgotMsg" class="msg" role="status" aria-live="polite"></div>
+
+        <div class="footer-links">
+          <a href="index.html">Voltar ao login</a>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <script src="storage.js"></script>
+  <script src="utils.js"></script>
+  <script src="auth.js"></script>
+</body>
+</html>

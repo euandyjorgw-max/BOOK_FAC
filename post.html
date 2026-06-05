@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Book-face — Post</title>
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="layout.css" />
+  <link rel="stylesheet" href="components.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="left"><img src="logo.png" alt="Book-face" class="logo-small"></div>
+    <div class="center">Post</div>
+    <div class="right"><a href="feed.html" class="link">Voltar</a></div>
+  </header>
+
+  <main class="container single-col">
+    <section id="postView" class="card">
+      <!-- conteúdo do post será carregado via JS -->
+    </section>
+  </main>
+
+  <script src="storage.js"></script>
+  <script src="ui.js"></script>
+  <script>
+    (function(){
+      const params = new URLSearchParams(location.search);
+      const id = params.get('id');
+      const posts = DB.getPosts();
+      const post = posts.find(p => String(p.id) === String(id));
+      const el = document.getElementById('postView');
+      if (!post) { el.innerHTML = '<p class="muted">Post não encontrado.</p>'; return; }
+      el.innerHTML = `
+        <div class="post card">
+          <div class="meta">
+            <img src="${post.avatar||'avatar-default.png'}" alt="">
+            <div><strong>${post.name}</strong><div class="muted">${post.time}</div></div>
+          </div>
+          <div class="content">${post.text}</div>
+          <div class="actions"><button class="btn small">Curtir (${post.likes||0})</button></div>
+        </div>
+      `;
+    })();
+  </script>
+</body>
+</html>
